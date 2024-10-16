@@ -1,28 +1,37 @@
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
-    """Base configuration class."""
-    DEBUG = False
-    TESTING = False
-    SECRET_KEY = os.environ.get('SECRET_KEY', '2cd748e8306e84f64599459b6cbd78af')  # Use a secure key for production
-
-    # Database Configuration
-    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Avoids overhead
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')  # Default to SQLite
-
+    """Base configuration."""
+    SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')  # Ensure you set this in your .env file
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Disable track modifications for performance
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default_jwt_secret')  # Ensure you set this in your .env file
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')  # Default log level
+    LOG_FILE = os.getenv('LOG_FILE', 'app.log')  # Log file name
 
 class DevelopmentConfig(Config):
-    """Development configuration class."""
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')  # SQLite for dev
-
+    """Development configuration."""
+    SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URL', 'sqlite:///dev.db')  # Default SQLite for dev
 
 class TestingConfig(Config):
-    """Testing configuration class."""
+    """Testing configuration."""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///test_db.sqlite3'  # Use a separate SQLite database for tests
-
+    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL', 'sqlite:///test.db')  # Default SQLite for testing
+    PRESERVE_CONTEXT_ON_EXCEPTION = False  # Disable for easier testing
 
 class ProductionConfig(Config):
-    """Production configuration class."""
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')  # Use your production database URL
+    """Production configuration."""
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # Production database URL (set in .env)
+    
+# Dictionary to select the appropriate configuration based on environment
+config_by_name = {
+    'dev': DevelopmentConfig,
+    'test': TestingConfig,
+    'prod': ProductionConfig
+}
+
+# Default configuration
+config = config_by_name[os.getenv('FLASK_ENV', 'dev')]

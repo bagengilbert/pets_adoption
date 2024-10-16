@@ -6,6 +6,7 @@ from server.models.adoption import Adoption
 from server.models.pet import Pet
 from server.schemas.adoption_schema import AdoptionSchema
 from server.database import db
+from server.logger import logger  # Import the logger
 
 adoption_blueprint = Blueprint('adoption', __name__)
 adoption_schema = AdoptionSchema()
@@ -21,6 +22,8 @@ def adopt_pet():
     adoption = Adoption(user_id=user_id, pet_id=pet.id)
     db.session.add(adoption)
     db.session.commit()
+
+    logger.info(f"User {user_id} adopted pet {pet.id}.")  # Log the adoption action
     return adoption_schema.dump(adoption), 201
 
 @adoption_blueprint.route('/adoptions', methods=['GET'])
@@ -29,6 +32,8 @@ def get_adoptions():
     """Get all adopted pets for the logged-in user."""
     user_id = get_jwt_identity()
     adoptions = Adoption.query.filter_by(user_id=user_id).all()
+    
+    logger.info(f"User {user_id} retrieved their adoptions.")  # Log the retrieval action
     return adoption_schema.dump(adoptions, many=True), 200
 
 @adoption_blueprint.route('/adoptions/<int:adoption_id>', methods=['DELETE'])
@@ -38,6 +43,8 @@ def delete_adoption(adoption_id):
     adoption = Adoption.query.get_or_404(adoption_id)
     db.session.delete(adoption)
     db.session.commit()
+
+    logger.info(f"User {get_jwt_identity()} deleted adoption {adoption_id}.")  # Log the deletion action
     return jsonify({"msg": "Adoption deleted"}), 204
 
 @adoption_blueprint.route('/adoptions/<int:adoption_id>', methods=['PUT', 'PATCH'])
@@ -51,10 +58,12 @@ def update_adoption(adoption_id):
         # Full update
         adoption.pet_id = data['pet_id']
         adoption.user_id = get_jwt_identity()
+        logger.info(f"User {adoption.user_id} updated adoption {adoption_id}.")  # Log the update action
     elif request.method == 'PATCH':
         # Partial update
         if 'pet_id' in data:
             adoption.pet_id = data['pet_id']
+            logger.info(f"User {adoption.user_id} partially updated adoption {adoption_id}.")  # Log partial update action
     
     db.session.commit()
     return adoption_schema.dump(adoption), 200
