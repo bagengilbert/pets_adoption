@@ -8,9 +8,15 @@ from server.config import config
 from server.models.user import User
 from server.models.pet import Pet
 from server.models.favorite_pet import FavoritePet
+from server.models.adoption import Adoption
+from server.models.review import Review
+from server.models.shelter import Shelter
 from server.resources.user_resource import UserResource
 from server.resources.pet_resource import PetResource
 from server.resources.favorite_pet_resource import FavoritePetResource
+from server.resources.adoption_resource import AdoptionResource
+from server.resources.review_resource import ReviewResource
+from server.resources.shelter_resource import ShelterResource
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -36,10 +42,13 @@ if not app.debug:
 def index():
     return {"message": "Welcome to the PETS_ADOPTION API"}
 
-# Registering user, pet, and favorite pet resources
+# Registering user, pet, favorite pet, adoption, review, and shelter resources
 app.add_url_rule('/api/users', view_func=UserResource.as_view('user_resource'))
 app.add_url_rule('/api/pets', view_func=PetResource.as_view('pet_resource'))
 app.add_url_rule('/api/favorite_pets', view_func=FavoritePetResource.as_view('favorite_pet_resource'))
+app.add_url_rule('/api/adoptions', view_func=AdoptionResource.as_view('adoption_resource'))
+app.add_url_rule('/api/reviews', view_func=ReviewResource.as_view('review_resource'))
+app.add_url_rule('/api/shelters', view_func=ShelterResource.as_view('shelter_resource'))
 
 # Error handlers
 @app.errorhandler(404)
