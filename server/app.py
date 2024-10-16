@@ -1,22 +1,19 @@
+# server/app.py
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-import logging
-from logging.handlers import RotatingFileHandler
 from server.config import config
-from server.models.user import User
-from server.models.pet import Pet
-from server.models.favorite_pet import FavoritePet
-from server.models.adoption import Adoption
-from server.models.review import Review
-from server.models.shelter import Shelter
-from server.resources.user_resource import UserResource
-from server.resources.pet_resource import PetResource
-from server.resources.favorite_pet_resource import FavoritePetResource
-from server.resources.adoption_resource import AdoptionResource
-from server.resources.review_resource import ReviewResource
-from server.resources.shelter_resource import ShelterResource
+from server.logger import setup_logger  # Import the setup_logger function
+
+# Import resources
+from server.resources.user_resource import user_blueprint
+from server.resources.pet_resource import pet_blueprint
+from server.resources.favorite_resource import favorite_blueprint
+from server.resources.adoption_resource import adoption_blueprint
+from server.resources.review_resource import review_blueprint
+from server.resources.shelter_resource import shelter_blueprint
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -30,12 +27,7 @@ migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
 # Set up logging
-if not app.debug:
-    handler = RotatingFileHandler(app.config['LOG_FILE'], maxBytes=10000, backupCount=1)
-    handler.setLevel(app.config['LOG_LEVEL'])
-    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-    handler.setFormatter(formatter)
-    app.logger.addHandler(handler)
+setup_logger(app)  # Pass the app instance to the logger setup function
 
 # Register API resources
 @app.route('/api')
@@ -43,12 +35,12 @@ def index():
     return {"message": "Welcome to the PETS_ADOPTION API"}
 
 # Registering user, pet, favorite pet, adoption, review, and shelter resources
-app.add_url_rule('/api/users', view_func=UserResource.as_view('user_resource'))
-app.add_url_rule('/api/pets', view_func=PetResource.as_view('pet_resource'))
-app.add_url_rule('/api/favorite_pets', view_func=FavoritePetResource.as_view('favorite_pet_resource'))
-app.add_url_rule('/api/adoptions', view_func=AdoptionResource.as_view('adoption_resource'))
-app.add_url_rule('/api/reviews', view_func=ReviewResource.as_view('review_resource'))
-app.add_url_rule('/api/shelters', view_func=ShelterResource.as_view('shelter_resource'))
+app.register_blueprint(user_blueprint, url_prefix='/api/users')
+app.register_blueprint(pet_blueprint, url_prefix='/api/pets')
+app.register_blueprint(favorite_blueprint, url_prefix='/api/favorite_pets')
+app.register_blueprint(adoption_blueprint, url_prefix='/api/adoptions')
+app.register_blueprint(review_blueprint, url_prefix='/api/reviews')
+app.register_blueprint(shelter_blueprint, url_prefix='/api/shelters')
 
 # Error handlers
 @app.errorhandler(404)

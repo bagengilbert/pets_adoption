@@ -1,38 +1,27 @@
 # server/logger.py
 
 import logging
-from logging.handlers import RotatingFileHandler
-import os
 
-def setup_logger(app):
-    """Set up logging for the Flask app."""
+def setup_logger(app=None):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
     
-    # Create logs directory if it doesn't exist
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
-
-    # Create a rotating file handler
-    handler = RotatingFileHandler(
-        'logs/app.log', 
-        maxBytes=10 * 1024 * 1024,  # 10 MB per file
-        backupCount=5                # Keep 5 backup files
-    )
-    handler.setLevel(logging.INFO)
-
-    # Create a formatter and set it for the handler
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
     # Create a console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    
+    # Create a formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    
+    # Add the handler to the logger
+    logger.addHandler(ch)
 
-    # Set up logging for the app
-    app.logger.addHandler(handler)
-    app.logger.addHandler(console_handler)
-    app.logger.setLevel(logging.INFO)  # Set the log level for the app
+    if app:
+        # Optionally attach the logger to the Flask app if needed
+        app.logger.addHandler(ch)
 
-    # Example log message
-    app.logger.info('Logger has been set up.')
+    return logger
 
+# Instantiate the logger
+logger = setup_logger()

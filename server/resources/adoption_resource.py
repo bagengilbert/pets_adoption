@@ -17,13 +17,17 @@ def adopt_pet():
     """Adopt a pet."""
     data = request.get_json()
     user_id = get_jwt_identity()
+    
+    # Fetch the pet to adopt
     pet = Pet.query.get_or_404(data['pet_id'])
     
+    # Create a new adoption record
     adoption = Adoption(user_id=user_id, pet_id=pet.id)
     db.session.add(adoption)
     db.session.commit()
 
-    logger.info(f"User {user_id} adopted pet {pet.id}.")  # Log the adoption action
+    # Log the adoption action
+    logger.info(f"User {user_id} adopted pet {pet.id}.")
     return adoption_schema.dump(adoption), 201
 
 @adoption_blueprint.route('/adoptions', methods=['GET'])
@@ -31,9 +35,12 @@ def adopt_pet():
 def get_adoptions():
     """Get all adopted pets for the logged-in user."""
     user_id = get_jwt_identity()
+    
+    # Retrieve all adoptions for the user
     adoptions = Adoption.query.filter_by(user_id=user_id).all()
     
-    logger.info(f"User {user_id} retrieved their adoptions.")  # Log the retrieval action
+    # Log the retrieval action
+    logger.info(f"User {user_id} retrieved their adoptions.")
     return adoption_schema.dump(adoptions, many=True), 200
 
 @adoption_blueprint.route('/adoptions/<int:adoption_id>', methods=['DELETE'])
@@ -44,7 +51,8 @@ def delete_adoption(adoption_id):
     db.session.delete(adoption)
     db.session.commit()
 
-    logger.info(f"User {get_jwt_identity()} deleted adoption {adoption_id}.")  # Log the deletion action
+    # Log the deletion action
+    logger.info(f"User {get_jwt_identity()} deleted adoption {adoption_id}.")
     return jsonify({"msg": "Adoption deleted"}), 204
 
 @adoption_blueprint.route('/adoptions/<int:adoption_id>', methods=['PUT', 'PATCH'])
@@ -57,13 +65,12 @@ def update_adoption(adoption_id):
     if request.method == 'PUT':
         # Full update
         adoption.pet_id = data['pet_id']
-        adoption.user_id = get_jwt_identity()
-        logger.info(f"User {adoption.user_id} updated adoption {adoption_id}.")  # Log the update action
+        logger.info(f"User {get_jwt_identity()} fully updated adoption {adoption_id}.")  # Log the full update
     elif request.method == 'PATCH':
         # Partial update
         if 'pet_id' in data:
             adoption.pet_id = data['pet_id']
-            logger.info(f"User {adoption.user_id} partially updated adoption {adoption_id}.")  # Log partial update action
+            logger.info(f"User {get_jwt_identity()} partially updated adoption {adoption_id}.")  # Log the partial update
     
     db.session.commit()
     return adoption_schema.dump(adoption), 200
